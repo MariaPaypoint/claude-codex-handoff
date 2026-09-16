@@ -52,6 +52,14 @@ codex_exit=$?
 printf '%s\n' "$codex_exit" > "$task_dir/exit-code"
 ```
 
+Доступные модели (в Codex CLI 0.154 отдельной команды `models list` нет):
+
+```bash
+{ printf '%s\n' '{"method":"initialize","id":0,"params":{"clientInfo":{"name":"model-list","version":"1.0"}}}'; sleep .2; printf '%s\n' '{"method":"initialized","params":{}}' '{"method":"model/list","id":1,"params":{"limit":100,"includeHidden":false}}'; sleep 1; } | codex app-server 2>/dev/null | jq -r 'select(.id == 1) | .result.data[].model'
+```
+
+Модель для запуска передаётся флагом: `codex exec -m <model> ...`.
+
 `-` явно читает весь промпт из stdin. `--output-last-message` сохраняет последнее
 сообщение агента; это handoff, а не весь журнал работы. Сохрани абсолютный путь
 к каталогу запуска, чтобы восстановить постановку после сжатия контекста.
