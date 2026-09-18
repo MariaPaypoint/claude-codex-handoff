@@ -1,50 +1,50 @@
 ---
 name: claude-codex-handoff
-description: "Делегирование ограниченных задач из Claude Code в Codex CLI: постановка, запуск, продолжение сессии и проверка результата. Используй, когда пользователь просит поручить правку или аудит Codex из Claude Code либо организовать совместную работу Claude и Codex."
+description: "Delegates scoped tasks from Claude Code to Codex CLI: prompt, exec launch, session resume, and result verification. Use when the user asks to hand a change or audit to Codex from Claude Code, or to coordinate Claude and Codex."
 ---
 
 # Claude Code → Codex CLI
 
-Claude Code ставит задачу, принимает результат и общается с пользователем.
-Codex CLI читает код, вносит ограниченные правки и выполняет проверки в своей
-сессии. В контекст Claude возвращается краткий handoff-отчёт; полные логи
-остаются в файлах.
+Claude Code sets the task, accepts the result, and talks to the user.
+Codex CLI reads the code, makes scoped edits, and runs checks in its own
+session. Claude gets a short handoff report back; full logs stay in files.
 
-## Что делегировать
+## What to delegate
 
-Codex подходит для правок с ясными границами, рефакторинга, тестов и аудита по
-конкретным критериям. Небольшую задачу, где постановка и приёмка дороже самой
-правки, проще выполнить в текущей сессии.
+Codex fits edits with clear bounds, refactors, tests, and audits against
+concrete criteria. A small task where prompting and acceptance cost more than
+the edit is cheaper to do in the current session.
 
-Перед делегированием проверь доступные инструменты. Сессии Claude и Codex
-имеют собственные настройки, авторизацию и MCP-подключения: доступ одного
-агента не означает доступ другого. Нужные правила проекта передай путями к
-доступным файлам, а не ссылками на отсутствующие у исполнителя скиллы.
+Before delegating, check which tools each side actually has. Claude and Codex
+sessions have their own settings, auth, and MCP connections: access on one
+agent does not imply access on the other. Pass project rules as paths to files
+the executor can read, not as links to skills it does not have.
 
-Для визуальной приёмки нужен агент с рабочим браузером. Если браузер есть
-только у Claude, поручай живую проверку ему или его субагенту после завершения
-правок Codex. Статический анализ и сборка не подтверждают внешний вид.
+Visual acceptance needs an agent with a working browser. If only Claude has a
+browser, give the live check to Claude or a Claude subagent after Codex
+finishes. Static analysis and a build do not confirm how the UI looks.
 
-## Подготовка
+## Prepare
 
-- Прочитай инструкции проекта (`AGENTS.md`, `CLAUDE.md`, если есть) и проверь
-  `git status`. Чужие изменения нельзя удалять, откатывать или присваивать.
-- Укажи цель, разрешённые файлы, ограничения и наблюдаемые критерии приёмки.
-  Попроси исполнителя сверить постановку с текущим кодом перед правками.
-- Для неоднозначной задачи сначала получи план в `read-only`, затем продолжи
-  ту же сессию на реализацию, передав принятые решения.
-- Промпты, логи и handoff храни в отдельном каталоге вне репозитория. Для каждого
-  запуска используй новые имена файлов, чтобы не принять старый отчёт за новый.
+- Read the project instructions (`AGENTS.md`, `CLAUDE.md` if present) and run
+  `git status`. Do not delete, revert, or claim someone else's changes.
+- State the goal, allowed files, constraints, and observable acceptance
+  criteria. Ask the executor to check the prompt against the current code
+  before editing.
+- For an ambiguous task, get a plan in `read-only` first, then resume the same
+  session for implementation with the accepted decisions.
+- Keep prompts, logs, and handoffs in a directory outside the repository. Use
+  new filenames for each run so you do not treat an old report as a new one.
 
-Шаблон задания и формат ответа: [references/prompt-template.md](references/prompt-template.md).
+Prompt template and reply format: [references/prompt-template.md](references/prompt-template.md).
 
-## Запуск
+## Launch
 
-Из каталога целевого репозитория или worktree:
+From the target repository or worktree:
 
 ```bash
 task_dir=$(mktemp -d "${TMPDIR:-/tmp}/claude-codex.XXXXXX")
-# Запиши задание в "$task_dir/prompt.md" по шаблону из references.
+# Write the task to "$task_dir/prompt.md" from the references template.
 codex exec -s workspace-write -c approval_policy=never \
   --output-last-message "$task_dir/handoff.md" - \
   < "$task_dir/prompt.md" > "$task_dir/run.log" 2>&1
@@ -52,33 +52,36 @@ codex_exit=$?
 printf '%s\n' "$codex_exit" > "$task_dir/exit-code"
 ```
 
-Доступные модели (в Codex CLI 0.154 отдельной команды `models list` нет):
+Available models (Codex CLI 0.154 has no separate `models list` command):
 
 ```bash
 { printf '%s\n' '{"method":"initialize","id":0,"params":{"clientInfo":{"name":"model-list","version":"1.0"}}}'; sleep .2; printf '%s\n' '{"method":"initialized","params":{}}' '{"method":"model/list","id":1,"params":{"limit":100,"includeHidden":false}}'; sleep 1; } | codex app-server 2>/dev/null | jq -r 'select(.id == 1) | .result.data[].model'
 ```
 
-Модель для запуска передаётся флагом: `codex exec -m <model> ...`.
+Pass the model with a flag: `codex exec -m <model> ...`.
 
-Для простых или средней сложности правок в код, а также для механики выбирай
-свежую модель Terra. Для задач средней и повышенной сложности — Sol; для очень
-сложной архитектуры и многошаговой диагностики в живой среде — Astra.
+For simple or medium code edits and mechanics, pick the current Terra model.
+For medium and higher complexity, use Sol. For very hard architecture and
+multi-step live diagnosis, use Astra.
 
-`-` явно читает весь промпт из stdin. `--output-last-message` сохраняет последнее
-сообщение агента; это handoff, а не весь журнал работы. Сохрани абсолютный путь
-к каталогу запуска, чтобы восстановить постановку после сжатия контекста.
+`-` reads the full prompt from stdin. `--output-last-message` saves the agent's
+last message; that is the handoff, not the full run journal. Keep the absolute
+path to the run directory so you can recover the prompt after context
+compression.
 
-Длительный запуск выполняй фоновым механизмом Claude Code (`run_in_background`,
-если доступен). Перед приёмкой дождись завершения и проверь код выхода. Ненулевой
-код означает ошибку запуска даже при наличии handoff; сначала разбери полный
-сохранённый лог. Не загружай успешный журнал целиком в контекст без необходимости.
+Run long jobs in the background (`run_in_background` in Claude Code, if
+available). Wait for completion and check the exit code before acceptance. A
+non-zero code is a launch failure even if a handoff exists; read the full
+saved log first. Do not load a successful journal into context unless you need
+it.
 
-Запускай из Git-репозитория; `--skip-git-repo-check` применим только для намеренной
-работы вне Git. Не используй его, чтобы скрыть ошибочный рабочий каталог.
+Start from a Git repository. `--skip-git-repo-check` is only for intentional
+work outside Git. Do not use it to hide a wrong working directory.
 
-## Продолжение сессии
+## Resume a session
 
-Возьми точный `session id` из журнала первого запуска и передай его явно:
+Take the exact `session id` from the first run's journal and pass it
+explicitly:
 
 ```bash
 codex exec -C /absolute/path/to/repository \
@@ -89,95 +92,100 @@ codex_exit=$?
 printf '%s\n' "$codex_exit" > "$task_dir/exit-code-2"
 ```
 
-Замени путь и `SESSION_ID` реальными значениями. Передай уточнение и изменения
-границ задачи; неизменившийся контекст уже есть в сессии. Опции `-C`, `-s`, `-c`
-относятся к `exec`, а `--output-last-message` в примере — к `resume`.
+Replace the path and `SESSION_ID` with real values. Send the refinement and
+any bound changes; the rest of the task context is already in the session.
+`-C`, `-s`, and `-c` belong to `exec`; `--output-last-message` in this example
+belongs to `resume`.
 
-Не используй `resume --last` при оркестрации: после другого запуска он может
-выбрать чужую сессию. Не включай `--ephemeral`, если понадобится продолжение.
-При использовании `--json` идентификатор доступен в событии `thread.started`
-как `thread_id`; сохрани его вместе с артефактами запуска.
+Do not use `resume --last` while orchestrating: after another run it may pick
+the wrong session. Do not pass `--ephemeral` if you will need to continue.
+With `--json`, the id is in the `thread.started` event as `thread_id`; save it
+with the other run artifacts.
 
-### Размер контекста сессии
+### Session context size
 
-Продолжать сессию или начинать новую решает сочетание размера контекста и
-близости задач, а не одна цифра. Мелкую доделку той же темы продолжай даже при
-40–50% окна. Для новой или далёкой темы создавай свежую сессию даже при
-20–30%; нужные знания передавай коротким списком в постановке — рабочая копия
-и описание MR свежей сессии и так видны.
+Whether to resume or start a new session depends on context size and how close
+the tasks are, not on one number. Continue a small follow-up on the same topic
+even at 40–50% of the window. For a new or distant topic, start a fresh
+session even at 20–30%; pass the needed facts as a short list in the prompt —
+a fresh session can already see the working tree and the MR description.
 
-Измеряй именно размер контекста: `tokens used` в конце лога — накопительная
-цена сессии. Текущий размер — `last_token_usage.input_tokens` последней записи
-в `~/.codex/sessions/<ГГГГ>/<ММ>/<ДД>/rollout-*<session id>*.jsonl`, окно —
-`model_context_window` там же. Проверено на Codex CLI 0.154 (17.09.2026).
+Measure context size, not spend: `tokens used` at the end of the log is the
+cumulative session cost. Current size is `last_token_usage.input_tokens` on
+the last record in
+`~/.codex/sessions/<YYYY>/<MM>/<DD>/rollout-*<session id>*.jsonl`. The window
+is `model_context_window` in the same file. Checked on Codex CLI 0.154
+(17 September 2026).
 
 ```bash
 ~/.claude/skills/claude-codex-handoff/scripts/codex-ctx.sh <session id>
 ```
 
-Скрипт печатает размер контекста и долю окна.
+The script prints the context size and the share of the window.
 
-## Права
+## Permissions
 
-Выбирай sandbox явно, включая повторный запуск:
+Pick the sandbox explicitly, including on resume:
 
-- `read-only` — чтение, план и ревью без изменения файлов проекта.
-- `workspace-write` — правки в рабочем каталоге. Сеть по умолчанию выключена,
-  но зависит от конфигурации. Для разрешённой задачи с сетью есть настройка
-  `-c sandbox_workspace_write.network_access=true`.
-- `danger-full-access` — выполнение без ограничений sandbox; применяй только
-  при уже согласованном доступе и подходящей изоляции, например внутри
-  специально подготовленного контейнера.
+- `read-only` — read, plan, and review without changing project files.
+- `workspace-write` — edits in the working directory. Network is off by
+  default, but that depends on configuration. For an allowed networked task
+  there is `-c sandbox_workspace_write.network_access=true`.
+- `danger-full-access` — no sandbox limits; use only with already agreed
+  access and suitable isolation, for example inside a prepared container.
 
-`approval_policy=never` означает отсутствие интерактивных запросов, а не выдачу
-дополнительных прав. Если действие заблокировано, зафиксируй конкретную причину
-и требуемую возможность. Не отключай ограничения автоматически. Доступ к Docker
-и локальным сокетам зависит от ОС, sandbox и конфигурации среды.
+`approval_policy=never` means no interactive prompts. It does not grant extra
+privileges. If an action is blocked, record the exact reason and the
+capability required. Do not turn restrictions off automatically. Docker and
+local sockets depend on the OS, sandbox, and environment config.
 
-Если Claude Code блокирует сам запуск, сообщи, какая команда не разрешена;
-изменение настроек доступа требует соответствующего разрешения пользователя.
-Не добавляй широкие разрешения и не меняй глобальный конфиг ради обхода отказа.
+If Claude Code blocks the launch itself, say which command was denied;
+changing access settings needs the user's permission. Do not add broad
+allow-rules or change the global config to bypass a denial.
 
-## Параллельная работа
+## Parallel work
 
-Два исполнителя могут менять один checkout только при явно непересекающихся
-областях ответственности. В обоих промптах укажи, какие файлы принадлежат другому
-агенту. Учитывай генерируемые файлы, lock-файлы, сборочные артефакты, порты и БД.
+Two executors may edit one checkout only with explicitly disjoint
+responsibilities. Name the other agent's files in both prompts. Count
+generated files, lock files, build artifacts, ports, and databases.
 
-Для пересекающихся изменений используй отдельные worktree. Интегрируй результат
-после просмотра diff и проверки в целевой ветке; удаляй worktree только после
-сохранения работы. Живую проверку запускай после завершения изменений и сборки,
-чтобы проверяющий не наблюдал промежуточное состояние.
+For overlapping edits use separate worktrees. Integrate after you inspect the
+diff and run checks on the target branch; delete a worktree only after the
+work is kept. Start the live check after edits and the build finish so the
+checker does not see a half-done state.
 
-## Независимое ревью
+## Independent review
 
-Если требуется ревью, запусти новую сессию `codex exec -s read-only`. Передай
-цель задачи, правила проекта, базовый и целевой SHA. Для незакоммиченных правок
-зафиксируй область проверки и не меняй её во время ревью.
+If you need a review, start a new session `codex exec -s read-only`. Pass the
+task goal, project rules, and the base and target SHAs. For uncommitted
+edits, freeze the review scope and do not change it during the review.
 
-Не передавай ревьюеру handoff исполнителя и свои выводы о корректности: пусть
-проверит код независимо. Попроси только находки с важностью, `файл:строка`,
-сценарием ошибки и рекомендуемой правкой. Обычный `exec` позволяет задать эти
-критерии в промпте без привязки к отдельному интерфейсу `review`.
+Do not give the reviewer the implementer's handoff or your own correctness
+claims: let it inspect the code independently. Ask only for findings with
+severity, `file:line`, a failure scenario, and a recommended fix. Ordinary
+`exec` can take those criteria in the prompt; you do not need a separate
+`review` interface.
 
-Согласованные замечания отправь рабочей сессии через `resume`. Спорные выводы
-проверяй по коду и воспроизводимым сценариям; число согласных агентов не является
-доказательством. Не запускай повторное широкое ревью вместо адресного вопроса.
+Send agreed findings to the working session with `resume`. Check disputed
+claims against the code and reproducible scenarios; a count of agreeing
+agents is not evidence. Do not start another broad review instead of a
+pointed question.
 
-## Приёмка
+## Acceptance
 
-Handoff описывает заявления исполнителя. Принимающий агент проверяет результат:
+The handoff is the executor's claims. The accepting agent checks the result:
 
-1. Прочитай ограничения и незавершённые пункты, затем код выхода запуска.
-2. Сверь файлы с `git status`, `git diff --stat` и самим diff; учитывай новые
-   неотслеживаемые файлы, которых нет в обычном `git diff`.
-3. Подтверди каждый критерий подходящим артефактом: результатом теста, живым
-   сценарием, ответом API, скриншотом или проверенным документом. Повтори ключевую
-   проверку, если доступного независимого результата недостаточно.
-4. Сохраняй полный вывод проверок и реальный exit code. Не подменяй его кодом
-   `tail` или `tee`; при ошибке изучи весь лог, при большом объёме — частями.
-5. Если обязательная проверка недоступна, явно укажи её и причину. Не называй
-   результат полностью проверенным и не маскируй сбой повторными запусками.
+1. Read the constraints and unfinished items, then the launch exit code.
+2. Reconcile files with `git status`, `git diff --stat`, and the diff itself;
+   include new untracked files that a plain `git diff` misses.
+3. Confirm each criterion with a matching artifact: a test result, a live
+   scenario, an API response, a screenshot, or a checked document. Re-run the
+   key check if you do not have an independent result.
+4. Keep the full check output and the real exit code. Do not replace it with
+   the code of `tail` or `tee`; on failure read the whole log, in chunks if it
+   is large.
+5. If a required check is unavailable, say so and why. Do not call the result
+   fully verified, and do not hide a failure behind retries.
 
-Коммиты, публикация и изменения во внешних системах выполняются только в рамках
-задания пользователя. Сам факт делегирования не даёт новых полномочий.
+Commits, publishes, and external-system changes happen only inside the user's
+task. Delegation itself grants no extra authority.

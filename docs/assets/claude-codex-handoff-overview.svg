@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 500" width="1280" height="500" role="img" aria-labelledby="title desc">
+  <title id="title">One Claude session can run several small Codex subagents</title>
+  <desc id="desc">You talk to Claude. Inside one Claude session, Claude can start several Codex subagents. Each Codex gets a scoped prompt, edits in its own session, and returns a short handoff. Claude verifies and reports back to you.</desc>
+  <rect width="1280" height="500" fill="#ffffff"/>
+
+  <style>
+    .label { font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; }
+  </style>
+
+  <!-- You: start -->
+  <circle cx="72" cy="188" r="9" fill="#ffffff" stroke="#E36B3A" stroke-width="2.5"/>
+  <text class="label" x="72" y="218" text-anchor="middle" font-size="14" fill="#6B7280">You</text>
+  <line x1="81" y1="188" x2="188" y2="188" stroke="#E36B3A" stroke-width="1.75"/>
+  <polygon points="188,184 200,188 188,192" fill="#E36B3A"/>
+  <text class="label" x="132" y="178" text-anchor="middle" font-size="13" fill="#E36B3A">ask</text>
+
+  <!-- Session frame -->
+  <rect x="200" y="36" width="1040" height="400" rx="36" fill="#FAFBFC" stroke="#E5E7EB" stroke-width="1.5"/>
+  <text class="label" x="720" y="418" text-anchor="middle" font-size="13" fill="#9CA3AF">one Claude session</text>
+
+  <!-- Claude: large orchestrator -->
+  <rect x="228" y="68" width="300" height="250" rx="36" fill="#FFF7F1" stroke="#F07A4A" stroke-width="2.25"/>
+  <circle cx="378" cy="136" r="28" fill="#ffffff" stroke="#F07A4A" stroke-width="2"/>
+  <path d="M378 118 v36 M360 136 h36 M365 123 l26 26 M391 123 l-26 26" fill="none" stroke="#F07A4A" stroke-width="2" stroke-linecap="round"/>
+  <text class="label" x="378" y="200" text-anchor="middle" font-size="36" font-weight="700" fill="#1F2933">Claude</text>
+  <text class="label" x="378" y="232" text-anchor="middle" font-size="16" fill="#6B7280">orchestrator</text>
+  <text class="label" x="378" y="258" text-anchor="middle" font-size="14" fill="#9CA3AF">plans, launches, checks</text>
+
+  <!-- Outgoing spine -->
+  <line x1="528" y1="120" x2="1168" y2="120" stroke="#E36B3A" stroke-width="1.75"/>
+  <text class="label" x="780" y="108" text-anchor="middle" font-size="13" fill="#E36B3A">scoped prompts</text>
+  <line x1="700" y1="120" x2="700" y2="156" stroke="#E36B3A" stroke-width="1.75"/>
+  <line x1="900" y1="120" x2="900" y2="156" stroke="#E36B3A" stroke-width="1.75"/>
+  <line x1="1100" y1="120" x2="1100" y2="156" stroke="#E36B3A" stroke-width="1.75"/>
+  <text class="label" x="1180" y="124" text-anchor="start" font-size="18" fill="#9CA3AF">...</text>
+
+  <!-- Small Codex cards -->
+  <rect x="626" y="156" width="148" height="70" rx="16" fill="#F3FBFA" stroke="#2A9B8F" stroke-width="1.75"/>
+  <text class="label" x="700" y="184" text-anchor="middle" font-size="12" font-weight="700" fill="#2A9B8F">&lt;/&gt;</text>
+  <text class="label" x="700" y="208" text-anchor="middle" font-size="18" font-weight="700" fill="#1F2933">Codex</text>
+
+  <rect x="826" y="156" width="148" height="70" rx="16" fill="#F3FBFA" stroke="#2A9B8F" stroke-width="1.75"/>
+  <text class="label" x="900" y="184" text-anchor="middle" font-size="12" font-weight="700" fill="#2A9B8F">&lt;/&gt;</text>
+  <text class="label" x="900" y="208" text-anchor="middle" font-size="18" font-weight="700" fill="#1F2933">Codex</text>
+
+  <rect x="1026" y="156" width="148" height="70" rx="16" fill="#F3FBFA" stroke="#2A9B8F" stroke-width="1.75"/>
+  <text class="label" x="1100" y="184" text-anchor="middle" font-size="12" font-weight="700" fill="#2A9B8F">&lt;/&gt;</text>
+  <text class="label" x="1100" y="208" text-anchor="middle" font-size="18" font-weight="700" fill="#1F2933">Codex</text>
+  <text class="label" x="900" y="246" text-anchor="middle" font-size="13" fill="#9CA3AF">subagents</text>
+
+  <!-- Return collector -->
+  <line x1="700" y1="226" x2="700" y2="348" stroke="#2A9B8F" stroke-width="1.5"/>
+  <line x1="900" y1="226" x2="900" y2="348" stroke="#2A9B8F" stroke-width="1.5"/>
+  <line x1="1100" y1="226" x2="1100" y2="348" stroke="#2A9B8F" stroke-width="1.5"/>
+  <line x1="560" y1="348" x2="1100" y2="348" stroke="#2A9B8F" stroke-width="1.5"/>
+  <text class="label" x="900" y="370" text-anchor="middle" font-size="13" fill="#2A9B8F">short handoffs</text>
+
+  <!-- verify, fed by Claude -->
+  <line x1="378" y1="318" x2="378" y2="348" stroke="#E36B3A" stroke-width="1.5"/>
+  <line x1="378" y1="348" x2="520" y2="348" stroke="#E36B3A" stroke-width="1.5"/>
+  <circle cx="540" cy="348" r="20" fill="#ffffff" stroke="#2A9B8F" stroke-width="2"/>
+  <path d="M532 348 l5 5 12-13" fill="none" stroke="#2A9B8F" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+  <text class="label" x="540" y="386" text-anchor="middle" font-size="13" fill="#6B7280">verify</text>
+
+  <!-- report -->
+  <line x1="520" y1="348" x2="86" y2="348" stroke="#E36B3A" stroke-width="1.75"/>
+  <polygon points="86,344 74,348 86,352" fill="#E36B3A"/>
+  <circle cx="72" cy="348" r="9" fill="#ffffff" stroke="#E36B3A" stroke-width="2.5"/>
+  <text class="label" x="72" y="378" text-anchor="middle" font-size="14" fill="#6B7280">You</text>
+  <text class="label" x="136" y="338" text-anchor="middle" font-size="13" fill="#E36B3A">report</text>
+</svg>

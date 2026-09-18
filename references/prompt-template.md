@@ -1,53 +1,54 @@
-# Задание для Codex CLI
+# Prompt for Codex CLI
 
-Скопируй шаблон в файл вне репозитория. Заполни конкретные пути, границы и
-проверки; убери неприменимые пункты. Секреты в промпт не вставляй.
+Copy the template into a file outside the repository. Fill in concrete paths,
+bounds, and checks; drop items that do not apply. Do not put secrets in the
+prompt.
 
 ```markdown
-# Контекст
+# Context
 
-Репозиторий: <абсолютный путь>, worktree: <путь>, ветка: <имя>.
-Цель: <какое поведение должно измениться и зачем>.
-Прочитай сначала: <AGENTS.md / CLAUDE.md, если есть>, <документ проекта>.
-Сверь постановку с текущим кодом до начала правок; сообщи о противоречиях.
+Repository: <absolute path>, worktree: <path>, branch: <name>.
+Goal: <what behavior should change and why>.
+Read first: <AGENTS.md / CLAUDE.md if present>, <project document>.
+Check this prompt against the current code before editing; report contradictions.
 
-# Что сделать
+# What to do
 
-1. <файл или модуль>: <конкретное изменение>.
-2. <следующее изменение, если нужно>.
+1. <file or module>: <concrete change>.
+2. <next change, if needed>.
 
-# Границы
+# Bounds
 
-- Твоя область ответственности: <файлы или модули>.
-- Ты не один в репозитории: <другой агент> меняет <файлы>.
-  Сохраняй чужие изменения и учитывай их в своей работе.
-- Если потребуется выйти за границы, объясни необходимость до такой правки.
-- Не коммить и не пушь: оставь результат в рабочем дереве.
-- Не меняй секреты, настройки доступа и конфигурацию вне задачи.
-- <Ограничения проекта: публичный API, совместимость, локализации и т. п.>.
+- Your scope: <files or modules>.
+- You are not alone in the repository: <other agent> is changing <files>.
+  Keep their changes and account for them in your work.
+- If you need to leave the bounds, explain why before that edit.
+- Do not commit or push: leave the result in the working tree.
+- Do not change secrets, access settings, or config outside the task.
+- <Project constraints: public API, compatibility, localizations, and so on>.
 
-# Критерии приёмки и проверки
+# Acceptance and checks
 
-- <Наблюдаемый сценарий и ожидаемый результат>.
-- <Точная команда релевантной проверки>; ожидается exit code 0.
-- git diff --check; ожидается exit code 0.
-- Сохрани полный вывод каждой проверки в <каталог артефактов> и зафиксируй
-  её exit code. Если проверка недоступна или упала, сообщи причину.
-- <Кто и как проверяет UI, если задача имеет визуальные критерии>.
+- <Observable scenario and expected result>.
+- <Exact relevant check command>; expect exit code 0.
+- git diff --check; expect exit code 0.
+- Save the full output of each check under <artifact directory> and record
+  its exit code. If a check is unavailable or failed, say why.
+- <Who checks the UI and how, if the task has visual criteria>.
 
-# Итоговый handoff
+# Final handoff
 
-1. Изменённые файлы — по строке о сути каждой правки.
-2. Проверки — точные команды, exit codes и пути к полным логам.
-3. Что не удалось или сделано иначе — причина и влияние на результат.
-4. Оставшиеся вопросы — только решения, для которых нужна информация владельца.
+1. Changed files — one line on what each edit did.
+2. Checks — exact commands, exit codes, and paths to full logs.
+3. What failed or was done differently — reason and impact.
+4. Remaining questions — only decisions that need the owner.
 ```
 
-При продолжении по `SESSION_ID` достаточно отдельного файла с уточнением:
+For a follow-up on `SESSION_ID`, a separate refinement file is enough:
 
 ```markdown
-Исправь <конкретное замечание>.
-Обновлённый критерий приёмки: <сценарий>.
-Границы задачи прежние. Запиши новые результаты проверок в отдельные файлы.
-Верни handoff в прежнем формате.
+Fix <concrete finding>.
+Updated acceptance criterion: <scenario>.
+Task bounds are unchanged. Write new check results to separate files.
+Return the handoff in the same format.
 ```
