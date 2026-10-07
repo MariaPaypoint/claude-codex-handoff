@@ -23,7 +23,8 @@ flowchart TD
 ```
 
 Independent review uses a fresh Codex session in `read-only`. A live UI check stays with Claude
-if only Claude has a browser.
+if only Claude has a browser. For visual refinement, keep comparison, edits, and live
+verification with the same browser-capable agent.
 
 ## Install
 
@@ -84,8 +85,9 @@ Visual acceptance needs a working browser on the checking agent. This skill does
 browser or MCP tools. If the main work is a manual visual check of a small edit, delegation may
 not pay off.
 
-The model, provider, and limits come from your Claude Code and Codex settings. The skill does
-not lock a model and does not promise token or dollar savings.
+The model, provider, and limits come from your Claude Code and Codex settings. Discover the
+provider's available model IDs before choosing one; the skill recommends capabilities rather
+than fixed model names and does not promise token or dollar savings.
 
 ## Compatibility
 

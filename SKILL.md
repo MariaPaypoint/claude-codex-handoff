@@ -23,6 +23,10 @@ the executor can read, not as links to skills it does not have.
 Visual acceptance needs an agent with a working browser. If only Claude has a
 browser, give the live check to Claude or a Claude subagent after Codex
 finishes. Static analysis and a build do not confirm how the UI looks.
+For visual refinement against a prototype or design, give the comparison,
+edits, and live verification to the same browser-capable agent. Repeatedly
+switching between a visual checker and an executor without a browser adds
+another browser pass to each iteration.
 
 ## Prepare
 
@@ -52,7 +56,8 @@ codex_exit=$?
 printf '%s\n' "$codex_exit" > "$task_dir/exit-code"
 ```
 
-Available models (Codex CLI 0.154 has no separate `models list` command):
+Discover available models before choosing one (Codex CLI 0.154 has no separate
+`models list` command):
 
 ```bash
 { printf '%s\n' '{"method":"initialize","id":0,"params":{"clientInfo":{"name":"model-list","version":"1.0"}}}'; sleep .2; printf '%s\n' '{"method":"initialized","params":{}}' '{"method":"model/list","id":1,"params":{"limit":100,"includeHidden":false}}'; sleep 1; } | codex app-server 2>/dev/null | jq -r 'select(.id == 1) | .result.data[].model'
@@ -60,14 +65,31 @@ Available models (Codex CLI 0.154 has no separate `models list` command):
 
 Pass the model with a flag: `codex exec -m <model> ...`.
 
-For simple or medium code edits and mechanics, pick the current Terra model.
-For medium and higher complexity, use Sol. For very hard architecture and
-multi-step live diagnosis, use Astra.
+With a custom `model_provider`, this list may be empty. If the provider exposes
+an OpenAI-compatible model catalog, query `GET <base_url>/models` with its
+configured authentication. The base URL and any configured HTTP headers are
+in `[model_providers.<name>]` in `~/.codex/config.toml`; keep credentials out of
+prompts, handoffs, and shared logs. Use only model IDs supported by that provider.
+`model_not_found` or `unknown provider for model` indicates an unavailable model
+or a routing problem; resolve it before continuing.
+
+Choose a current lightweight model for mechanical edits, a current general
+coding model for ordinary implementation, and a higher-capability model for
+hard architecture or multi-step diagnosis. If the provider has no suitable
+current lightweight model, use its current general coding model rather than
+an outdated one just because of its family name.
 
 `-` reads the full prompt from stdin. `--output-last-message` saves the agent's
 last message; that is the handoff, not the full run journal. Keep the absolute
 path to the run directory so you can recover the prompt after context
 compression.
+
+Pass the prompt as `- < prompt.md`. A positional prompt with an open stdin
+can leave a background process waiting at
+`Reading additional input from stdin...`. In a custom-provider setup without
+ChatGPT login, a `Failed to refresh token` warning does not by itself explain
+that wait; check stdin and the provider's actual API response before diagnosing
+an authentication failure.
 
 Run long jobs in the background (`run_in_background` in Claude Code, if
 available). Wait for completion and check the exit code before acceptance. A
